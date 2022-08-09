@@ -63,6 +63,7 @@ add_filter('graphql_comment_object_connection_query_args', 'wpgraphqlwpml_handle
 function wpgraphqlwpml_add_post_type_fields(\WP_Post_Type $post_type_object)
 {
     $type = ucfirst($post_type_object->graphql_single_name);
+
     register_graphql_field(
         $post_type_object->graphql_single_name,
         'locale',
@@ -262,7 +263,7 @@ function graphql_wpml_get_localized_tags(int $post_id, string $language_code): a
 
     $sitepress->switch_lang($current_language);
 
-    return $localized_post_tags;
+    return is_array($localized_post_tags) ? $localized_post_tags : [];
 }
 
 /**
@@ -499,7 +500,7 @@ function wpgraphqlwpml_action_graphql_register_language_where_filters()
         'RootQueryToCategoryConnectionWhereArgs',
         'RootQueryToCommentConnectionWhereArgs',
     ];
-    
+
     $language_field_params = [
         'wpmlLanguage' => [
             'type' => 'String',
@@ -509,13 +510,13 @@ function wpgraphqlwpml_action_graphql_register_language_where_filters()
 
     //Get all new custom post types that are available in the GraphQL schema
     $gql_valid_custom_post_types = get_post_types([
-        'show_in_graphql' => true, 
+        'show_in_graphql' => true,
         '_builtin' => false
     ], 'objects');
 
     //Get all new taxonomies post types that are available in the GraphQL schema
     $gql_valid_taxonomies = get_taxonomies([
-        'show_in_graphql' => true, 
+        'show_in_graphql' => true,
         '_builtin' => false
     ], 'objects');
 
@@ -523,7 +524,7 @@ function wpgraphqlwpml_action_graphql_register_language_where_filters()
     foreach ($gql_valid_custom_post_types as $custom_post_type) {
         $connections_where_name[] = 'RootQueryTo' . ucwords($custom_post_type->graphql_single_name) . 'ConnectionWhereArgs';
     }
-    
+
     //Add the custom taxonomies to the connections that require the language filter option
     foreach ($gql_valid_taxonomies as $custom_taxonomy) {
         $connections_where_name[] = 'RootQueryTo' . ucwords($custom_taxonomy->graphql_single_name) . 'ConnectionWhereArgs';

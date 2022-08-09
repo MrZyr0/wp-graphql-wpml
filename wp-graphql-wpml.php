@@ -221,6 +221,48 @@ function wpgraphqlwpml_add_post_type_fields(\WP_Post_Type $post_type_object)
             },
         ]
     );
+    register_graphql_field(
+        $post_type_object->graphql_single_name,
+        'localizedWpmlTags',
+        [
+            'type' => ['list_of' => 'tag'],
+            'description' => __('WPML localized tags', 'wp-graphql-wpml'),
+            'resolve' => function (
+                \WPGraphQL\Model\Post $post,
+                $args,
+                $context,
+                $info
+            ) {
+                global $sitepress;
+
+                $post_id = $post->ID;
+                $langInfo = apply_filters('wpml_post_language_details', NULL, $post_id);
+                $post_language = $langInfo['language_code'];
+
+                $localized_post_tags = graphql_wpml_get_localized_tags($post_id, $post_language);
+
+                return $localized_post_tags;
+            },
+        ]
+    );
+}
+
+/**
+ * @param int $post_id
+ * @param $language
+ * @return array
+ */
+function graphql_wpml_get_localized_tags(int $post_id, string $language_code): array
+{
+    global $sitepress;
+    $current_language = $sitepress->get_current_language();
+    $sitepress->switch_lang($language_code);
+
+    $localized_post_tags = get_the_tags($post_id);
+
+    $sitepress->switch_lang($current_language);
+
+    return $localized_post_tags;
 }
 
 /**

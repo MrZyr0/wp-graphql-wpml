@@ -41,20 +41,26 @@ add_filter('graphql_post_object_connection_query_args', 'wpgraphqlwpml_disable_w
 
 function wpgraphqlwpml_handle_language_filter_request($query_args, $source, $args, $context, $info)
 {
-    $lang = $args['where']['wpmlLanguage'];
-    //If the wpmlLanguage argument exists in the WHERE parameters
-    if(isset($lang)){
-        global $sitepress;
-        //If WPML is installed
-        if($sitepress){
-            //Switch the current locale
-            $sitepress->switch_lang($lang);
-            //Remove the argument added earlier that removes all language filtering
-            $query_args['suppress_wpml_where_and_join_filter'] = false;
-        }
+    if (!isset($args['where']) || !is_array($args['where']) || !array_key_exists('wpmlLanguage', $args['where'])) {
+        return $query_args;
     }
 
-  return $query_args;
+    $lang = $args['where']['wpmlLanguage'];
+    if(!isset($lang)){
+        return $query_args;
+    }
+    
+    global $sitepress;
+    //If WPML is not installed
+    if(!$sitepress){
+        return $query_args;
+    }
+
+    //Switch the current locale
+    $sitepress->switch_lang($lang);
+    //Remove the argument added earlier that removes all language filtering
+    $query_args['suppress_wpml_where_and_join_filter'] = false;
+    return $query_args;
 }
 add_filter('graphql_post_object_connection_query_args', 'wpgraphqlwpml_handle_language_filter_request', 110, 5);
 add_filter('graphql_term_object_connection_query_args', 'wpgraphqlwpml_handle_language_filter_request', 110, 5);
